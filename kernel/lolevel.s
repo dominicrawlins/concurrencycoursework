@@ -17,9 +17,9 @@
 lolevel_handler_rst: bl    int_init                @ initialise interrupt vector table
 
                      msr   cpsr, #0xD2             @ enter IRQ mode with IRQ and FIQ interrupts disabled
-                     ldr   sp, =tos_irq            @ initialise IRQ mode stack
+                     ldr   sp, =tos            @ initialise IRQ mode stack
                      msr   cpsr, #0xD3             @ enter SVC mode with IRQ and FIQ interrupts disabled
-                     ldr   sp, =tos_svc            @ initialise SVC mode stack
+                     ldr   sp, =tos            @ initialise SVC mode stack
 
                      sub   sp, sp, #68             @ initialise dummy context
 
@@ -49,7 +49,7 @@ lolevel_handler_svc: sub   lr, lr, #0              @ correct return address
                      add   sp, sp, #60             @ update   SVC mode SP
                      movs  pc, lr                  @ return from interrupt
 
-lolevel_handler_irq: sub   lr, lr, #0              @ correct return address
+lolevel_handler_irq: sub   lr, lr, #4              @ correct return address
                      sub   sp, sp, #60             @ update   SVC mode stack
                      stmia sp, { r0-r12, sp, lr }^ @ preserve USR registers
                      mrs   r0, spsr                @ move     USR        CPSR
