@@ -165,26 +165,33 @@ void hilevel_handler_svc( ctx_t* ctx, uint32_t id ) {
 
 
     case 0x03 : { // 0x03 => fork()
-      pcb_t* parent = &pcb[executing];
-      uint32_t child_id = pcbsize++;
-      pcb_t* child = &pcb[child_id];
+      uint32_t childid = -1;
+      for(int i = 0; i < pcbsize; i++){
+        if(pcb[i].status == STATUS_TERMINATED){
+          childid = i;
+        }
+      }
+      if(childid == -1){
+        childid = pcbsize++;
+      }
       memcpy( &pcb[executing].ctx, ctx, sizeof(ctx_t));
-      memcpy( &pcb[child_id], &pcb[executing], sizeof( pcb_t ) );
-      pcb[child_id].pid      =  pidcount++;
-      pcb[child_id].tos      = (uint32_t) &tos - (child_id * 0x1000);
+      memcpy( &pcb[childid], &pcb[executing], sizeof( pcb_t ) );
+      pcb[childid].pid      =  pidcount++;
+      pcb[childid].status   = STATUS_CREATED;
+      pcb[childid].tos      = (uint32_t) &tos - (childid * 0x1000);
       uint32_t offsetstack = (uint32_t)(pcb[executing].tos - pcb[executing].ctx.sp);
-      pcb[child_id].ctx.sp = (uint32_t)(pcb[child_id].tos - offsetstack);
-      void *childstartofstack = (void *)(pcb[child_id].tos - 0x00001000);
+      pcb[childid].ctx.sp = (uint32_t)(pcb[childid].tos - offsetstack);
+      void *childstartofstack = (void *)(pcb[childid].tos - 0x00001000);
       void *parentstartofstack = (void *)(pcb[executing].tos - 0x00001000);
       memcpy(childstartofstack, parentstartofstack, 0x00001000);
-      parent->ctx.gpr[ 0 ] = child->pid;
-      child->ctx.gpr[ 0 ] = 0;
-      memcpy(ctx, &parent->ctx, sizeof(ctx_t));
+      pcb[executing].ctx.gpr[ 0 ] = pcb[childid].pid;
+      pcb[childid].ctx.gpr[ 0 ] = 0;
+      memcpy(ctx, &pcb[executing].ctx, sizeof(ctx_t));
       break;
     }
     case 0x06 : { //0x04 => exit()
       uint32_t programid = (uint32_t)(ctx ->gpr[0]);
-      int processnumbertodelete = -1;
+      uint32_t processnumbertodelete = -1;
       for(int i = 0; i < pcbsize; i++){
         uint32_t findpid = pcb[i].pid;
         if(findpid == programid){
@@ -195,8 +202,10 @@ void hilevel_handler_svc( ctx_t* ctx, uint32_t id ) {
         void *startofstack = (void *)(pcb[processnumbertodelete].tos - 0x00001000);
         memset(startofstack, 0, 0x00001000);
         memset(&pcb[processnumbertodelete], 0, sizeof(pcb_t));
-        memcpy(&pcb[processnumbertodelete], &pcb[pcbsize - 1], sizeof(pcb_t));
-        pcbsize--;
+        pcb[processnumbertodelete].status =   STATUS_TERMINATED;
+        if(processnumbertodelete == pcbsize - 1){
+          pcbsize--;
+        }
       }
       break;
     }
