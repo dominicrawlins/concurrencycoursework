@@ -34,19 +34,33 @@ void scheduler( ctx_t* ctx ) {
   }
 
 */
- int oldexecuting = -1;
- if(executing == pcbsize - 1){
-   oldexecuting = executing;
-   executing = 0;
- }
- else{
-   oldexecuting = executing;
-   executing++;
- }
- memcpy( &(pcb[ oldexecuting ].ctx), ctx, sizeof( ctx_t ) ); // preserve P_1
- pcb[ oldexecuting ].status = STATUS_READY;                // update   P_1 status
- memcpy( ctx, &(pcb[ executing ].ctx), sizeof( ctx_t ) ); // restore  P_2
- pcb[ executing ].status = STATUS_EXECUTING;            // update   P_2 status
+bool doeschange = true;
+int oldexecuting = executing;
+int nextexecuting = executing + 1;
+while(1){
+  if(nextexecuting == pcbsize){
+    nextexecuting = 0;
+  }
+  if(pcb[nextexecuting].status == STATUS_READY){
+    executing = nextexecuting;
+    break;
+  }
+
+  if(nextexecuting == oldexecuting){
+    doeschange = false;
+    break;
+  }
+    nextexecuting++;
+}
+
+
+if(doeschange){
+  memcpy( &(pcb[ oldexecuting ].ctx), ctx, sizeof( ctx_t ) ); // preserve P_1
+  pcb[ oldexecuting ].status = STATUS_READY;                // update   P_1 status
+  memcpy( ctx, &(pcb[ executing ].ctx), sizeof( ctx_t ) ); // restore  P_2
+  pcb[ executing ].status = STATUS_EXECUTING;            // update   P_2 status
+}
+
 
 
   return;
@@ -167,9 +181,9 @@ void hilevel_handler_svc( ctx_t* ctx, uint32_t id ) {
     case 0x03 : { // 0x03 => fork()
       uint32_t childid = -1;
       for(int i = 0; i < pcbsize; i++){
-        if(pcb[i].status == STATUS_TERMINATED){
-          childid = i;
-        }
+      if(pcb[i].status == STATUS_TERMINATED){
+      childid = i;
+      }
       }
       if(childid == -1){
         childid = pcbsize++;
@@ -177,7 +191,7 @@ void hilevel_handler_svc( ctx_t* ctx, uint32_t id ) {
       memcpy( &pcb[executing].ctx, ctx, sizeof(ctx_t));
       memcpy( &pcb[childid], &pcb[executing], sizeof( pcb_t ) );
       pcb[childid].pid      =  pidcount++;
-      pcb[childid].status   = STATUS_CREATED;
+      pcb[childid].status   = STATUS_READY;
       pcb[childid].tos      = (uint32_t) &tos - (childid * 0x1000);
       uint32_t offsetstack = (uint32_t)(pcb[executing].tos - pcb[executing].ctx.sp);
       pcb[childid].ctx.sp = (uint32_t)(pcb[childid].tos - offsetstack);
@@ -191,20 +205,16 @@ void hilevel_handler_svc( ctx_t* ctx, uint32_t id ) {
     }
     case 0x06 : { //0x04 => exit()
       uint32_t programid = (uint32_t)(ctx ->gpr[0]);
-      uint32_t processnumbertodelete = -1;
       for(int i = 0; i < pcbsize; i++){
         uint32_t findpid = pcb[i].pid;
         if(findpid == programid){
-          processnumbertodelete = i;
-        }
-      }
-      if(processnumbertodelete > -1){
-        void *startofstack = (void *)(pcb[processnumbertodelete].tos - 0x00001000);
-        memset(startofstack, 0, 0x00001000);
-        memset(&pcb[processnumbertodelete], 0, sizeof(pcb_t));
-        pcb[processnumbertodelete].status =   STATUS_TERMINATED;
-        if(processnumbertodelete == pcbsize - 1){
-          pcbsize--;
+          void *startofstack = (void *)(pcb[i].tos - 0x00001000);
+          memset(startofstack, 0, 0x00001000);
+          memset(&pcb[i], 0, sizeof(pcb_t));
+          pcb[i].status =   STATUS_TERMINATED;
+          if(i == pcbsize - 1){
+            pcbsize--;
+          }
         }
       }
       break;
