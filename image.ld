@@ -17,7 +17,7 @@ SECTIONS {
   /* align       address (per AAPCS) */
   .       = ALIGN( 8 );
   /* allocate stack                  */
-  .       = . + 0x00100000;
+  .       = . + 0x01000000;
   tos  = .;
 
 

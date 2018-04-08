@@ -52,4 +52,12 @@ uint32_t tos;
 } pcb_t;
 
 
+typedef struct {
+  pid_t write;
+  pid_t read;
+  uint32_t data;
+  bool inuse;
+} pipetype;
+
+
 #endif
