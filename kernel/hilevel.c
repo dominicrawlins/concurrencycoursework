@@ -16,7 +16,7 @@
  *   can be created, and neither is able to terminate.
  */
 
-int pcbsize;  int amountofpcbs = 50; pcb_t pcb[50]; int executing = 0; int changetime = 0; pipetype pipe[100];
+int pcbsize;  int amountofpcbs = 50; pcb_t pcb[50]; int executing; int changetime = 0; pipetype pipe[100];
 
 void scheduler(ctx_t* ctx) {
   bool doeschange = true;
@@ -50,7 +50,7 @@ extern uint32_t tos;
 extern void     main_P4();
 extern void     main_console();
 int pidcount;
-uint32_t ptos = (uint32_t)&tos - (50 * sizeof(pcb_t));
+//uint32_t ptos = (uint32_t)&tos - (50 * sizeof(pcb_t));
 
 
 void hilevel_handler_rst(ctx_t* ctx) {
@@ -202,11 +202,12 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       uint32_t endpid = (uint32_t)ctx ->gpr[1];
       for(int i = 0; i < 100; i++){
         if(pipe[i].inuse == false){
-          uint32_t startofpipe = (uint32_t)&ptos - (i * sizeof(pipetype));
-          memset(0, startofpipe, sizeof(pipetype));
+          void *startofpipe = (void *)&pipe[i] - sizeof(pipetype);
+          memset(startofpipe, 0, sizeof(pipetype));
           pipe[i].inuse = true;
           pipe[i].write = startpid;
           pipe[i].read = endpid;
+          break;
         }
       }
       break;
@@ -220,6 +221,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
           if(pipe[i].read == endpid){
             pipeid = i;
             pipe[i].data = 0;
+            break;
           }
         }
       }
@@ -237,7 +239,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       int writepid = (uint32_t)ctx ->gpr[0];
       int readpid = (uint32_t)ctx ->gpr[1];
       int pipenumber = -1;
-      for(i = 0; i < 100; i++){
+      for(int i = 0; i < 100; i++){
         if(pipe[i].write == writepid){
           if(pipe[i].read == readpid){
             pipenumber = i;
@@ -246,6 +248,24 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
         }
       }
       ctx ->gpr[0] = pipenumber;
+      break;
+    }
+    case 0x0C : { //0x0C => pread(pipenumber)
+      int pipenumber = (uint32_t)ctx ->gpr[0];
+      uint32_t data = pipe[pipenumber].data;
+      ctx ->gpr[0] = data;
+      break;
+    }
+    case 0x0D : { //0x0D => pclose(pipenumber)
+      int pipenumber = (uint32_t)ctx ->gpr[0];
+      pipe[pipenumber].data = 0;
+      break;
+    }
+    case 0x0E : { //0x0E => punlink(pipenumber)
+      int pipenumber = (uint32_t)ctx ->gpr[0];
+      void *startofpipe = (void *)&pipe[pipenumber] - sizeof(pipetype);
+      memset(startofpipe, 0, sizeof(pipetype));
+      pipe[pipenumber].inuse = false;
       break;
     }
     default   : { // 0x?? => unknown/unsupported

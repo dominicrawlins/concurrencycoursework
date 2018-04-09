@@ -197,3 +197,35 @@ int  pfind( int writepid, int readpid ) {
 
   return r;
 }
+
+uint32_t  pread( int pipenumber ) {
+  uint32_t r;
+
+  asm volatile( "mov r0, %2 \n" // assign r0 =  pipenumber
+                "svc %1     \n" // make system call SYS_KILL
+                "mov %0, r0 \n" // assign r0 =    r
+              : "=r" (r)
+              : "I" (SYS_PREAD), "r" (pipenumber)
+              : "r0");
+
+  return r;
+}
+
+void pclose( int pipenumber ) {
+  asm volatile( "mov r0, %1 \n" // assign r0 =  pipenumber
+                "svc %0     \n" // make system call SYS_PCLOSE
+              :
+              : "I" (SYS_PCLOSE), "r" (pipenumber)
+              : "r0" );
+
+  return;
+}
+void punlink( int pipenumber ) {
+  asm volatile( "mov r0, %1 \n" // assign r0 =  pipenumber
+                "svc %0     \n" // make system call SYS_PUNLINK
+              :
+              : "I" (SYS_PUNLINK), "r" (pipenumber)
+              : "r0" );
+
+  return;
+}

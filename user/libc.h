@@ -42,6 +42,9 @@ typedef int pid_t;
 #define SYS_POPEN      ( 0x09 )
 #define SYS_PWRITE    ( 0x0A )
 #define SYS_PFIND     ( 0x0B )
+#define SYS_PREAD     ( 0x0C )
+#define SYS_PCLOSE    ( 0x0D )
+#define SYS_PUNLINK   ( 0x0E )
 
 #define SIG_TERM      ( 0x00 )
 #define SIG_QUIT      ( 0x01 )
@@ -89,5 +92,14 @@ extern void pwrite( int pipenumber, uint32_t data);
 
 //find pipe to read from
 extern int pfind( int writepid, int readpid);
+
+//read from pipe
+extern uint32_t pread( int pipenumber);
+
+//close pipe
+void pclose(int pipenumber);
+
+//delete pipe
+void punlink(int pipenumber);
 
 #endif
