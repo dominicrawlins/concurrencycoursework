@@ -23,17 +23,16 @@ uint32_t gcd( uint32_t x, uint32_t y ) {
     int pipenumber = pfind(1,2);
     uint32_t number = pread(pipenumber);
     pipegot = true;
-    return pipenumber;
+    return number;
   }
 
 void main_P4() {
-
+  uint32_t number = numbercollect();
+  char* printdata;
+  itoa(printdata, number);
   while( 1 ) {
-    void *number = 0;
-    write( STDOUT_FILENO, number, 1 );
-    if(!pipegot){
-      number = numbercollect();
-    }
+
+    write( STDOUT_FILENO, printdata, 1 );
     uint32_t lo = 1 <<  4;
     uint32_t hi = 1 <<  8;
 

@@ -132,7 +132,6 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       scheduler(ctx);
       break;
     }
-
     case 0x01 : { // 0x01 => write( fd, x, n )
       int fd = (int)(ctx->gpr[0]);
       char* x = (char*)(ctx->gpr[1]);
@@ -141,12 +140,9 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       for(int i = 0; i < n; i++) {
         PL011_putc(UART0, *x++, true);
       }
-
       //ctx->gpr[0] = n;
       break;
     }
-
-
     case 0x03 : { // 0x03 => fork()
       uint32_t childid = -1;
       for(int i = 0; i < pcbsize; i++){
@@ -196,14 +192,13 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       ctx->sp = pcb[executing].tos;
       break;
     }
-
     case 0x08 : {  //0x08 => mkfifo(startpid, endpid)
       uint32_t startpid = (uint32_t)ctx ->gpr[0];
       uint32_t endpid = (uint32_t)ctx ->gpr[1];
       for(int i = 0; i < 100; i++){
         if(pipe[i].inuse == false){
-          void *startofpipe = (void *)&pipe[i] - sizeof(pipetype);
-          memset(startofpipe, 0, sizeof(pipetype));
+          //void *startofpipe = (void *)&pipe[i] - sizeof(pipetype);
+          //memset(startofpipe, 0, sizeof(pipetype));
           pipe[i].inuse = true;
           pipe[i].write = startpid;
           pipe[i].read = endpid;
@@ -234,7 +229,6 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       pipe[pipenumber].data = data;
       break;
     }
-
     case 0x0B : { //0x0B => pfind(writepid, readpid)
       int writepid = (uint32_t)ctx ->gpr[0];
       int readpid = (uint32_t)ctx ->gpr[1];
@@ -264,14 +258,14 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     case 0x0E : { //0x0E => punlink(pipenumber)
       int pipenumber = (uint32_t)ctx ->gpr[0];
       void *startofpipe = (void *)&pipe[pipenumber] - sizeof(pipetype);
-      memset(startofpipe, 0, sizeof(pipetype));
+      //memset(startofpipe, 0, sizeof(pipetype));
       pipe[pipenumber].inuse = false;
+      pipe[pipenumber].data = 0;
       break;
     }
     default   : { // 0x?? => unknown/unsupported
       break;
     }
   }
-
   return;
 }

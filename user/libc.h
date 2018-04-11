@@ -45,6 +45,7 @@ typedef int pid_t;
 #define SYS_PREAD     ( 0x0C )
 #define SYS_PCLOSE    ( 0x0D )
 #define SYS_PUNLINK   ( 0x0E )
+#define SYS_CONSOLE   ( 0x0F )
 
 #define SIG_TERM      ( 0x00 )
 #define SIG_QUIT      ( 0x01 )

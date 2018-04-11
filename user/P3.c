@@ -21,7 +21,8 @@ void writetopipe(){
   mkfifo(1,2);
   popen(1,2);
   int pipeno = pfind(1,2);
-  pwrite(pipeno, 8);
+  uint32_t data = 8;
+  pwrite(pipeno, data);
   pipesetup = true;
   yield();
 }
