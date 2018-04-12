@@ -45,7 +45,7 @@ typedef int pid_t;
 #define SYS_PREAD     ( 0x0C )
 #define SYS_PCLOSE    ( 0x0D )
 #define SYS_PUNLINK   ( 0x0E )
-#define SYS_CONSOLE   ( 0x0F )
+#define SYS_GETPID   ( 0x0F )
 
 #define SIG_TERM      ( 0x00 )
 #define SIG_QUIT      ( 0x01 )
@@ -98,9 +98,13 @@ extern int pfind( int writepid, int readpid);
 extern uint32_t pread( int pipenumber);
 
 //close pipe
-void pclose(int pipenumber);
+extern void pclose(int pipenumber);
 
 //delete pipe
-void punlink(int pipenumber);
+extern void punlink(int pipenumber);
+
+//getpid
+extern int getpid();
+
 
 #endif

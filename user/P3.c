@@ -24,7 +24,6 @@ void writetopipe(){
   uint32_t data = 8;
   pwrite(pipeno, data);
   pipesetup = true;
-  yield();
 }
 
 void main_P3() {

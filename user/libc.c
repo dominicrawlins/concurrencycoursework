@@ -167,7 +167,7 @@ int  popen( int pid, int endpid ) {
                 "svc %1     \n" // make system call SYS_OPEN
                 "mov %0, r0 \n" // assign r0 =    r
               : "=r" (r)
-              : "I" (SYS_POPEN), "r" (pid), "r" (endpid)
+              : "I" (SYS_POPEN), "r" (pid), "r" (pid)
               : "r0", "r1" );
 
   return r;
@@ -229,3 +229,15 @@ void punlink( int pipenumber ) {
 
   return;
 }
+
+  int  getpid() {
+    int r;
+
+    asm volatile( "svc %1     \n" // make system call SYS_GETPID
+                  "mov %0, r0 \n" // assign r  = r0
+                : "=r" (r)
+                : "I" (SYS_GETPID)
+                : "r0" );
+
+    return r;
+  }

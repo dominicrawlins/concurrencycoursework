@@ -1,5 +1,5 @@
-#ifndef __PHILOSOPHER_H
-#define __PHILOSOPHER_H
+#ifndef __TABLE_H
+#define __TABLE_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -7,12 +7,10 @@
 
 #include "libc.h"
 
-
 typedef struct {
   int pid;
   int pipein;
   int pipeout;
-} processes;
-
+} philosophers;
 
 #endif

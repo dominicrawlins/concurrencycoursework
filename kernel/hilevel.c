@@ -89,7 +89,7 @@ PL011_putc(UART0, 'R', true);
   pcb[0].status = STATUS_EXECUTING;
   executing = 0;
 
-  TIMER0->Timer1Load  = 0x00100000; // select period = 2^20 ticks ~= 1 sec
+  TIMER0->Timer1Load  = 0x00001000; // select period = 2^20 ticks ~= 1 sec
   TIMER0->Timer1Ctrl  = 0x00000002; // select 32-bit   timer
   TIMER0->Timer1Ctrl |= 0x00000040; // select periodic timer
   TIMER0->Timer1Ctrl |= 0x00000020; // enable          timer interrupt
@@ -186,8 +186,8 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     }
     case 0x05 : {  //0x05 => exec()
       uint32_t programcounter = (uint32_t)ctx -> gpr[0];
-      void *copyinto = (void *)pcb[executing].tos - 0x00001000;
-      memset(copyinto, 0, 0x00001000);
+      //void *copyinto = (void *)pcb[executing].tos - 0x00001000;
+      //memset(copyinto, 0, 0x00001000);
       ctx->pc = programcounter;
       ctx->sp = pcb[executing].tos;
       break;
@@ -261,6 +261,10 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       //memset(startofpipe, 0, sizeof(pipetype));
       pipe[pipenumber].inuse = false;
       pipe[pipenumber].data = 0;
+      break;
+    }
+    case 0x0F : { //0x0F => getpid()
+      ctx -> gpr[0] = pcb[executing].pid;
       break;
     }
     default   : { // 0x?? => unknown/unsupported
