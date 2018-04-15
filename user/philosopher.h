@@ -17,5 +17,6 @@ typedef struct {
 typedef enum{
   eating,
   thinking,
+  ready,
 }pstatus;
 #endif

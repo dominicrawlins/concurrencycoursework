@@ -10,7 +10,7 @@
 #define forkavailable 5
 
 
-void philprint(pstatus status, int inputpid){
+void philprint(pstatus status, int inputpid, int phase, int roundseaten){
   write(STDOUT_FILENO, "Philosopher ",12);
   char* printpid;
   itoa(printpid, inputpid);
@@ -21,6 +21,16 @@ void philprint(pstatus status, int inputpid){
   else if(status == eating){
     write(STDOUT_FILENO, " eating\n", 8);
   }
+  else if(status == ready){
+    write(STDOUT_FILENO, " ready\n",7);
+  }
+  if(phase == 10 || phase == 50 || phase == 100){
+    write(STDOUT_FILENO, "Rounds eaten: ", 14);
+    char *eaten;
+    itoa(eaten, roundseaten);
+    write(STDOUT_FILENO, eaten, 3);
+    write(STDOUT_FILENO, "\n\n", 2);
+  }
 }
 
 
@@ -30,8 +40,13 @@ void main_philosopher(){
   int fork[2] = {forkavailable, forkavailable};
   pstatus status = thinking;
   int phase = 0;
-  write( STDOUT_FILENO, "Phill Created: ", 15 );
+  int roundseaten = 0;
   pid = getpid();
+  write( STDOUT_FILENO, "Philosopher ", 12 );
+  char* ppid;
+  itoa(ppid, pid);
+  write(STDOUT_FILENO, ppid, 2);
+  write(STDOUT_FILENO, " created\n", 9 );
   for(int i = 0; i < 100; i++){
     int pipenumber = pfind(i,0);
     if(pread(pipenumber) == 666){
@@ -45,7 +60,6 @@ void main_philosopher(){
   pwrite(process[table].pipeout, pid);
   bool pipesfound = false;
   while(!pipesfound){
-    //write( STDOUT_FILENO, "Phill dommmmm: ", 15 );
     int tablepipein = pfind(process[table].pid, pid);
     if(tablepipein > 0){
       process[table].pipein = tablepipein;
@@ -63,6 +77,7 @@ void main_philosopher(){
       }
     }
   }
+  yield();
   int allpipessetup = 0;
   while(allpipessetup < 2){
     allpipessetup = 0;
@@ -73,17 +88,12 @@ void main_philosopher(){
       }
     }
   }
-//  pwrite(process[table].pipeout, green);
-    write( STDOUT_FILENO, "Phill Readyyy: ", 15 );
-    yield();
-  //  int trafficlight = red;
-  //  while(trafficlight == red){
-    //  trafficlight = pread(process[table].pipein);
-//}
-pwrite(process[left].pipeout, forkavailable);
-pwrite(process[right].pipeout, forkavailable);
-    write( STDOUT_FILENO, "Here\n", 5);
-    yield();
+  philprint(ready, pid, 0, 0);
+  yield();
+  pwrite(process[left].pipeout, forkavailable);
+  pwrite(process[right].pipeout, forkavailable);
+  write( STDOUT_FILENO, "Here\n", 5);
+  yield();
   while(1){
     int forkl = pread(process[left].pipein);
     int forkr = pread(process[right].pipein);
@@ -105,8 +115,6 @@ pwrite(process[right].pipeout, forkavailable);
     else if(forkr == forkavailable){
       fork[right] = forkavailable;
     }
-    //pwrite(process[left].pipein, 0);
-    //pwrite(process[right].pipein, 0);
     if(fork[left] == forkowned && fork[right] == forkowned && (phase + pid)%5 == 0){
       fork[left] = forkavailable;
       fork[right] = forkavailable;
@@ -117,9 +125,13 @@ pwrite(process[right].pipeout, forkavailable);
       fork[right] = forkowned;
       status = eating;
     }
+    if(status == eating){
+      roundseaten++;
+    }
     pwrite(process[left].pipeout, fork[left]);
     pwrite(process[right].pipeout, fork[right]);
-    philprint(status, pid);
+    pwrite(process[table].pipeout, status);
+    philprint(status, pid, phase, roundseaten);
     phase++;
     yield();
   }

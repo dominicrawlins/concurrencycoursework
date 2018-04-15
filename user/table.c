@@ -29,10 +29,11 @@ int clampnumber(int number){
   else return number;
 }
 
+
 void main_table(){
   lowestpid = 51;
   highestpid = -1;
-  write( STDOUT_FILENO, "Table Created: ", 15 );
+  write( STDOUT_FILENO, "Table Created: \n", 16 );
   tpid = getpid();
   mkfifo(tpid, 0);
   popen(tpid, 0);
@@ -75,24 +76,35 @@ void main_table(){
     data = data | (philosopher[clampnumber(i + 1)].pid);
     pwrite(philosopher[i].pipeout, data);
   }
-  int processesready = 0;
-  while(processesready < 16){
-    for(int i =0; i < 16; i++){
-      int ready = pread(philosopher[i].pipein);
-      if(ready == green){
-        pwrite(philosopher[i].pipein, 0);
-        processesready++;
-      }
-    }
-  }
-  for(int i = 0; i< 16; i++){
-    pwrite(philosopher[i].pipeout, green);
-  }
+  yield();
   while(1){
 
     for(int i = 0; i < 16; i++){
-
+      pstatus status = pread(philosopher[i].pipein);
+      if(status == eating){
+        forks[i] = i;
+        forks[clampnumber(i + 1)] = i;
+      }
+      else if(status == thinking){
+        if(forks[i] == i){
+          forks[i] = -1;
+        }
+        if(forks[clampnumber(i+1)] == i){
+          forks[clampnumber(i+1)] = -1;
+        }
+      }
+      write(STDOUT_FILENO, "Fork ",5);
+      char *no;
+      itoa(no, philosopher[i].pid);
+      write(STDOUT_FILENO, no, 2);
+      write(STDOUT_FILENO, ": ", 2);
+      char *held;
+      itoa(held, philosopher[forks[i]].pid);
+      write(STDOUT_FILENO, held, 2);
+      write(STDOUT_FILENO, "\n", 1);
     }
+    write(STDOUT_FILENO, "\n\n\n\n", 4);
+    yield();
   }
   exit( EXIT_SUCCESS );
 }

@@ -13,4 +13,10 @@ typedef struct {
   int pipeout;
 } philosophers;
 
+typedef enum{
+  eating,
+  thinking,
+  ready,
+}pstatus;
+
 #endif

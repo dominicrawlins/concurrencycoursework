@@ -148,6 +148,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       for(int i = 0; i < pcbsize; i++){
         if(pcb[i].status == STATUS_TERMINATED){
           childid = i;
+          break;
         }
       }
       if(childid == -1){
