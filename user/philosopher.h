@@ -14,5 +14,8 @@ typedef struct {
   int pipeout;
 } processes;
 
-
+typedef enum{
+  eating,
+  thinking,
+}pstatus;
 #endif
