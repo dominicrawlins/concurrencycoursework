@@ -241,3 +241,24 @@ void punlink( int pipenumber ) {
 
     return r;
   }
+
+  void imtable() {
+    asm volatile( "svc %0     \n" // make system call SYS_IMTABLE
+                :
+                : "I" (SYS_IMTABLE)
+                : );
+
+    return;
+  }
+
+  int  findtable() {
+    int r;
+
+    asm volatile( "svc %1     \n" // make system call SYS_FINDTABLE
+                  "mov %0, r0 \n" // assign r  = r0
+                : "=r" (r)
+                : "I" (SYS_FINDTABLE)
+                : "r0" );
+
+    return r;
+  }

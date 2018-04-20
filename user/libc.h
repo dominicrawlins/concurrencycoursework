@@ -39,13 +39,15 @@ typedef int pid_t;
 #define SYS_KILL      ( 0x06 )
 #define SYS_NICE      ( 0x07 )
 #define SYS_MKFIFO    ( 0x08 )
-#define SYS_POPEN      ( 0x09 )
+#define SYS_POPEN     ( 0x09 )
 #define SYS_PWRITE    ( 0x0A )
 #define SYS_PFIND     ( 0x0B )
 #define SYS_PREAD     ( 0x0C )
 #define SYS_PCLOSE    ( 0x0D )
 #define SYS_PUNLINK   ( 0x0E )
-#define SYS_GETPID   ( 0x0F )
+#define SYS_GETPID    ( 0x0F )
+#define SYS_IMTABLE   ( 0x10 )
+#define SYS_FINDTABLE ( 0x11 )
 
 #define SIG_TERM      ( 0x00 )
 #define SIG_QUIT      ( 0x01 )
@@ -105,6 +107,12 @@ extern void punlink(int pipenumber);
 
 //getpid
 extern int getpid();
+
+//declares this pid is the table pid
+extern void imtable();
+
+//finds tables pid
+extern int findtable();
 
 
 #endif

@@ -17,30 +17,34 @@
  */
 
 int pcbsize;  int amountofpcbs = 50; pcb_t pcb[50]; int executing; int changetime = 0; pipetype pipe[100];
+int tablepid;
 
 void scheduler(ctx_t* ctx) {
   bool doeschange = true;
   int oldexecuting = executing;
-  int nextexecuting = executing + 1;
-  while(1){
-    if(nextexecuting == pcbsize){
-      nextexecuting = 0;
-    }
-    if(pcb[nextexecuting].status == STATUS_READY){
-      executing = nextexecuting;
-      break;
+  int highestprioritypid;
+  int highestpriority = -1;
+
+  for(int i = 0; i < pcbsize; i++){
+    int priorityi = pcb[i].priority;
+    if(priorityi > highestpriority){
+      highestpriority = priorityi;
+      highestprioritypid = i;
+      if(i != oldexecuting){
+        doeschange = true;
       }
-    if(nextexecuting == oldexecuting){
-      doeschange = false;
-      break;
     }
-    nextexecuting++;
+    if(pcb[i].priority >= 0){
+      pcb[i].priority += 1;
+    }
   }
+  executing = highestprioritypid;
   if(doeschange){
     memcpy(&(pcb[oldexecuting].ctx), ctx, sizeof(ctx_t)); // preserve P_1
     pcb[oldexecuting].status = STATUS_READY;                // update   P_1 status
     memcpy(ctx, &(pcb[executing].ctx), sizeof(ctx_t)); // restore  P_2
     pcb[executing].status = STATUS_EXECUTING;            // update   P_2 status
+    pcb[executing].priority = 0;
   }
   return;
 }
@@ -181,6 +185,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
           if(i == pcbsize - 1){
             pcbsize--;
           }
+          pcb[i].priority = -1;
         }
       }
       break;
@@ -191,6 +196,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       //memset(copyinto, 0, 0x00001000);
       ctx->pc = programcounter;
       ctx->sp = pcb[executing].tos;
+      pcb[executing].priority = 0;
       break;
     }
     case 0x08 : {  //0x08 => mkfifo(startpid, endpid)
@@ -227,7 +233,9 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     case 0x0A : { //0x0A => pwrite(pipenumber, data)
       int pipenumber = (uint32_t)ctx ->gpr[0];
       uint32_t data = (uint32_t)ctx ->gpr[1];
-      pipe[pipenumber].data = data;
+      if(pipe[pipenumber].write == executing){
+        pipe[pipenumber].data = data;
+      }
       break;
     }
     case 0x0B : { //0x0B => pfind(writepid, readpid)
@@ -247,8 +255,10 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     }
     case 0x0C : { //0x0C => pread(pipenumber)
       int pipenumber = (uint32_t)ctx ->gpr[0];
-      uint32_t data = pipe[pipenumber].data;
-      ctx ->gpr[0] = data;
+      if(pipe[pipenumber].read == executing){
+        uint32_t data = pipe[pipenumber].data;
+        ctx ->gpr[0] = data;
+      }
       break;
     }
     case 0x0D : { //0x0D => pclose(pipenumber)
@@ -267,6 +277,12 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     case 0x0F : { //0x0F => getpid()
       ctx -> gpr[0] = pcb[executing].pid;
       break;
+    }
+    case 0x10 : { //0x10 => imtable()
+      tablepid =  pcb[executing].pid;
+    }
+    case 0x11 : { //0x11 => findtable()
+      ctx ->gpr[0] = tablepid;
     }
     default   : { // 0x?? => unknown/unsupported
       break;

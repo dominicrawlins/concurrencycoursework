@@ -41,22 +41,21 @@ void main_philosopher(){
   pstatus status = thinking;
   int phase = 0;
   int roundseaten = 0;
+
+
   pid = getpid();
+
   write( STDOUT_FILENO, "Philosopher ", 12 );
   char* ppid;
   itoa(ppid, pid);
   write(STDOUT_FILENO, ppid, 2);
   write(STDOUT_FILENO, " created\n", 9 );
-  for(int i = 0; i < 100; i++){
-    int pipenumber = pfind(i,0);
-    if(pread(pipenumber) == 666){
-      process[table].pid = i;
-      break;
-    }
-  }
+
+
+  process[table].pid = findtable();
   mkfifo(pid, process[table].pid);
   popen(pid, process[table].pid);
-  process[table].pipeout = pfind(pid, process[2].pid);
+  process[table].pipeout = pfind(pid, process[table].pid);
   pwrite(process[table].pipeout, pid);
   bool pipesfound = false;
   while(!pipesfound){
@@ -90,9 +89,9 @@ void main_philosopher(){
   }
   philprint(ready, pid, 0, 0);
   yield();
+  pwrite(process[table].pipeout, 0);
   pwrite(process[left].pipeout, forkavailable);
   pwrite(process[right].pipeout, forkavailable);
-  write( STDOUT_FILENO, "Here\n", 5);
   yield();
   while(1){
     int forkl = pread(process[left].pipein);
