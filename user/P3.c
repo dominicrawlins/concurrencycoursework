@@ -31,7 +31,7 @@ void main_P3() {
   while( 1 ) {
     write( STDOUT_FILENO, "P3", 2 );
     if(!pipesetup){
-      writetopipe();
+      //writetopipe();
     }
 
     uint32_t lo = 1 <<  8;

@@ -173,7 +173,25 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
       memcpy(ctx, &pcb[executing].ctx, sizeof(ctx_t));
       break;
     }
-    case 0x06 : { //0x04 => exit()
+    case 0x04 : { //0x04 => exit(int x)
+      uint32_t programid = pcb[executing].pid;
+      for(int i = 0; i < pcbsize; i++){
+        uint32_t findpid = pcb[i].pid;
+        if(findpid == programid){
+          void *startofstack = (void *)(pcb[i].tos - 0x00001000);
+          memset(startofstack, 0, 0x00001000);
+          memset(&pcb[i], 0, sizeof(pcb_t));
+          pcb[i].status = STATUS_TERMINATED;
+          if(i == pcbsize - 1){
+            pcbsize--;
+          }
+          pcb[i].priority = -1;
+        }
+      }
+      scheduler(ctx);
+      break;
+    }
+    case 0x06 : { //0x06 => kill()
       uint32_t programid = (uint32_t)(ctx ->gpr[0]);
       for(int i = 0; i < pcbsize; i++){
         uint32_t findpid = pcb[i].pid;
@@ -233,7 +251,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     case 0x0A : { //0x0A => pwrite(pipenumber, data)
       int pipenumber = (uint32_t)ctx ->gpr[0];
       uint32_t data = (uint32_t)ctx ->gpr[1];
-      if(pipe[pipenumber].write == executing){
+      if(pipe[pipenumber].write == pcb[executing].pid){
         pipe[pipenumber].data = data;
       }
       break;
@@ -255,7 +273,7 @@ void hilevel_handler_svc(ctx_t* ctx, uint32_t id) {
     }
     case 0x0C : { //0x0C => pread(pipenumber)
       int pipenumber = (uint32_t)ctx ->gpr[0];
-      if(pipe[pipenumber].read == executing){
+      if(pipe[pipenumber].read == pcb[executing].pid){
         uint32_t data = pipe[pipenumber].data;
         ctx ->gpr[0] = data;
       }

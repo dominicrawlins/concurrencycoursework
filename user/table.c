@@ -55,6 +55,7 @@ void main_table(){
       }
     }
   }
+  write(STDOUT_FILENO, "here\n", 5);
   for(int i = 0; i < 16; i++){
     forks[i] = -1;
     mkfifo(tpid, philosopher[i].pid);

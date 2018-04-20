@@ -32,7 +32,7 @@ void main_P4() {
   itoa(printdata, number);
   while( 1 ) {
 
-    write( STDOUT_FILENO, printdata, 1 );
+    write( STDOUT_FILENO, "P4", 2 );
     uint32_t lo = 1 <<  4;
     uint32_t hi = 1 <<  8;
 

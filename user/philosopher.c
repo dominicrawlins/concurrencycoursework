@@ -56,14 +56,21 @@ void main_philosopher(){
   mkfifo(pid, process[table].pid);
   popen(pid, process[table].pid);
   process[table].pipeout = pfind(pid, process[table].pid);
+  char * pppid;
+  itoa(pppid, pid);
+
+  write(STDOUT_FILENO, "pppid\n", 2);
   pwrite(process[table].pipeout, pid);
   bool pipesfound = false;
   while(!pipesfound){
+
     int tablepipein = pfind(process[table].pid, pid);
     if(tablepipein > 0){
+
       process[table].pipein = tablepipein;
       uint32_t data = pread(process[table].pipein);
       if(data != 0){
+
         process[left].pid = data >> 6;
         process[right].pid = data & 63;
         for(int i = 0; i < 2; i++){
@@ -71,11 +78,13 @@ void main_philosopher(){
           popen(pid, process[i].pid);
           process[i].pipeout = pfind(pid, process[i].pid);
           pwrite(process[i].pipeout, 88);
-          pipesfound = true;
+
         }
+        pipesfound = true;
       }
     }
   }
+
   yield();
   int allpipessetup = 0;
   while(allpipessetup < 2){
